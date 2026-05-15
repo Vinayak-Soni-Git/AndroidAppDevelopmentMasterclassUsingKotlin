@@ -3,7 +3,10 @@ package com.example.androidappdevelopmentmasterclassusingkotlin.FeedReader
 import android.content.Context
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.PersistableBundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.widget.ArrayAdapter
 import android.widget.ListView
 import androidx.activity.enableEdgeToEdge
@@ -32,6 +35,19 @@ class FeedEntry {
 }
 
 class MainFeedReaderActivity : AppCompatActivity() {
+    private lateinit var xmlListView: ListView
+
+    //    private val downloadData by lazy { DownloadData(this, xmlListView) }
+    private var downloadData: DownloadData? = null
+
+    private var feedUrl: String =
+        "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplicatoins/limit=10/xml"
+    private var feedLimit = 10
+
+    private var feedCachedUrl = "INVALIDATED"
+    private val STATE_URL = "feedUrl"
+    private val STATE_LIMIT = "feedLimit"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -41,9 +57,15 @@ class MainFeedReaderActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        val xmlListView: ListView = findViewById(R.id.top10_list_view)
-        val downloadData = DownloadData(this, xmlListView)
-        downloadData.execute("http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplicatoins/limit=10/xml")
+
+        if (savedInstanceState != null) {
+            feedUrl = savedInstanceState.getString(STATE_URL).toString()
+            feedLimit = savedInstanceState.getInt(STATE_LIMIT)
+
+        }
+
+        xmlListView = findViewById(R.id.top10_list_view)
+        downloadUrl(feedUrl.format(feedLimit))
     }
 
     companion object {
@@ -64,12 +86,16 @@ class MainFeedReaderActivity : AppCompatActivity() {
                 val parseApplications = ParseApplications()
                 parseApplications.parse(result)
 
-                val arrayAdapter = ArrayAdapter<FeedEntry>(
-                    propContext,
-                    R.layout.list_top_10_item,
-                    parseApplications.applications
-                )
-                propListView.adapter = arrayAdapter
+//                val arrayAdapter = ArrayAdapter<FeedEntry>(
+//                    propContext,
+//                    R.layout.list_top_10_item,
+//                    parseApplications.applications
+//                )
+//                propListView.adapter = arrayAdapter
+
+                val feedAdapter =
+                    FeedAdapter(propContext, R.layout.list_record, parseApplications.applications)
+                propListView.adapter = feedAdapter
             }
 
             @Deprecated("Deprecated in Java")
@@ -139,5 +165,64 @@ class MainFeedReaderActivity : AppCompatActivity() {
 //                return ""
 //            }
         }
+    }
+
+    private fun downloadUrl(feedUrl: String) {
+        if (feedUrl != feedCachedUrl) {
+            downloadData = DownloadData(this, xmlListView)
+            downloadData?.execute(feedUrl)
+            feedCachedUrl = feedUrl
+        } else {
+            Log.d("downloadUrl", "downloadUrl - URL not changed")
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(STATE_URL, feedUrl)
+        outState.putInt(STATE_LIMIT, feedLimit)
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.feed_menu, menu)
+        if (feedLimit == 10) {
+            menu?.findItem(R.id.menu_top10)?.isChecked = true
+        } else {
+            menu?.findItem(R.id.menu_top25)?.isChecked = true
+        }
+        return true
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+
+        when (item.itemId) {
+            R.id.menu_free -> feedUrl =
+                "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topfreeapplicatoins/limit=%d/xml"
+
+            R.id.menu_paid -> feedUrl =
+                "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/toppaidapplicatoins/limit=%d/xml"
+
+            R.id.menu_songs -> feedUrl =
+                "http://ax.itunes.apple.com/WebObjects/MZStoreServices.woa/ws/RSS/topsongs/limit=%d/xml"
+
+            R.id.menu_top10, R.id.menu_top25 -> {
+                if (!item.isChecked) {
+                    item.isChecked = true
+                    feedLimit = 35 - feedLimit
+                } else {
+
+                }
+            }
+
+            R.id.menu_refresh -> feedCachedUrl = "INVALIDATED"
+            else -> return super.onOptionsItemSelected(item)
+        }
+        downloadUrl(feedUrl.format(feedLimit))
+        return true
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        downloadData?.cancel(true)
     }
 }
