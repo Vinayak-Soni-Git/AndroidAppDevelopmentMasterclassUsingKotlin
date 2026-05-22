@@ -1,8 +1,11 @@
 package com.example.androidappdevelopmentmasterclassusingkotlin.YoutubePlayer
 
+import android.app.ComponentCaller
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.ViewGroup
-import android.widget.Button
+import android.widget.Toast
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -12,7 +15,15 @@ import com.google.android.youtube.player.YouTubeInitializationResult
 import com.google.android.youtube.player.YouTubePlayer
 import com.google.android.youtube.player.YouTubePlayerView
 
+const val YOUTUBE_VIDEO_ID = "LpizdiL5kvk"
+const val YOUTUBE_PLAYLIST = "PLXT..."
+
 class MainYoutubeActivity : YouTubeBaseActivity(), YouTubePlayer.OnInitializedListener {
+    private val TAG = "YoutubeActivity"
+    private val DIALOG_REQUEST_CODE = 1
+
+    val playerView by lazy { YouTubePlayerView(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // setContentView(R.layout.activity_main_youtube)
@@ -31,26 +42,113 @@ class MainYoutubeActivity : YouTubeBaseActivity(), YouTubePlayer.OnInitializedLi
 //        button1.text = "Button added"
 //        layout.addView(button1)
 
-        val playerView = YouTubePlayerView(this)
         playerView.layoutParams = ConstraintLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
         )
         layout.addView(playerView)
 
+        playerView.initialize(getString(R.string.GOOGLE_API_KEY), this)
     }
 
     override fun onInitializationSuccess(
-        p0: YouTubePlayer.Provider?,
-        p1: YouTubePlayer?,
-        p2: Boolean
+        provider: YouTubePlayer.Provider?,
+        youtubePlayer: YouTubePlayer?,
+        wasRestored: Boolean
     ) {
-        TODO("Not yet implemented")
+        youtubePlayer?.setPlayerStateChangeListener(playerStateChangeListener)
+        youtubePlayer?.setPlaybackEventListener(playbackEventListener)
+        if (!wasRestored) {
+            youtubePlayer?.loadVideo(YOUTUBE_VIDEO_ID)
+        } else {
+            youtubePlayer?.play()
+        }
     }
 
     override fun onInitializationFailure(
-        p0: YouTubePlayer.Provider?,
-        p1: YouTubeInitializationResult?
+        provider: YouTubePlayer.Provider?,
+        youtubeInitializationResult: YouTubeInitializationResult?
     ) {
-        TODO("Not yet implemented")
+        val REQUEST_CODE = 0
+        if (youtubeInitializationResult?.isUserRecoverableError == true) {
+            youtubeInitializationResult.getErrorDialog(this, REQUEST_CODE)?.show()
+        } else {
+            val errorMessage =
+                "There was a error initializing the youtubeplayer ($youtubeInitializationResult)"
+            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private val playbackEventListener = object : YouTubePlayer.PlaybackEventListener {
+        override fun onPlaying() {
+            Toast.makeText(
+                this@MainYoutubeActivity,
+                "Good, video is playing ok",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        override fun onPaused() {
+            Toast.makeText(this@MainYoutubeActivity, "Video has paused", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onStopped() {
+            Toast.makeText(this@MainYoutubeActivity, "Video has stopped", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onBuffering(p0: Boolean) {
+        }
+
+        override fun onSeekTo(p0: Int) {
+        }
+
+    }
+    private val playerStateChangeListener = object : YouTubePlayer.PlayerStateChangeListener {
+        override fun onLoading() {
+
+        }
+
+        override fun onLoaded(p0: String?) {
+
+        }
+
+        override fun onAdStarted() {
+            Toast.makeText(
+                this@MainYoutubeActivity,
+                "Click the ad now, make the video creator rich",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        override fun onVideoStarted() {
+            Toast.makeText(this@MainYoutubeActivity, "Video has started", Toast.LENGTH_SHORT).show()
+        }
+
+        override fun onVideoEnded() {
+            Toast.makeText(
+                this@MainYoutubeActivity,
+                "Congratulations! You've completed the video",
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+
+        override fun onError(p0: YouTubePlayer.ErrorReason?) {
+
+        }
+    }
+
+    override fun onActivityResult(
+        requestCode: Int,
+        resultCode: Int,
+        data: Intent?,
+        caller: ComponentCaller
+    ) {
+        Log.d(
+            TAG,
+            "onActivityResult called with response code $resultCode for request $requestCode"
+        )
+
+        if (requestCode == DIALOG_REQUEST_CODE) {
+            playerView.initialize(getString(R.string.GOOGLE_API_KEY), this)
+        }
     }
 }

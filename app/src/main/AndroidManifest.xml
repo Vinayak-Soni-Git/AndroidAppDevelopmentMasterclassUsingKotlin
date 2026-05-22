@@ -14,6 +14,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AndroidAppDevelopmentMasterclassUsingKotlin">
         <activity
+            android:name=".PhotoBrowserApp.MainPhotoBrowserActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AndroidAppDevelopmentMasterclassUsingKotlin" />
+        <activity
             android:name=".YoutubePlayer.MainYoutubeActivity"
             android:exported="false" />
         <activity
