@@ -46,6 +46,8 @@ dependencies {
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
     implementation(libs.androidx.recyclerview)
+    implementation("androidx.cardview:cardview:1.0.0")
+    implementation("com.squareup.picasso:picasso:2.71828")
 
     implementation(files("libs/YouTubeAndroidPlayerApi.jar"))
 

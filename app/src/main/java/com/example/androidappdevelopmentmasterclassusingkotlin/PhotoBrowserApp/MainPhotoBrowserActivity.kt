@@ -3,23 +3,23 @@ package com.example.androidappdevelopmentmasterclassusingkotlin.PhotoBrowserApp
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
+import android.view.View
+import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
-import androidx.navigation.findNavController
-import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
-import androidx.navigation.ui.navigateUp
-import androidx.navigation.ui.setupActionBarWithNavController
-import com.example.androidappdevelopmentmasterclassusingkotlin.R
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.androidappdevelopmentmasterclassusingkotlin.databinding.ActivityMainPhotoBrowserBinding
 
 class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadComplete,
-    GetFlickrJsonData.OnDataAvailable {
+    GetFlickrJsonData.OnDataAvailable, RecyclerItemClickListener.OnRecyclerClickListener {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
     private lateinit var binding: ActivityMainPhotoBrowserBinding
+    private val flickrRVAdaptor = FlickrRVAdaptor(ArrayList())
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -34,6 +34,16 @@ class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadCompl
             insets
         }
 
+        binding.flickrRecyclerView.layoutManager = LinearLayoutManager(this)
+        binding.flickrRecyclerView.addOnItemTouchListener(
+            RecyclerItemClickListener(
+                this,
+                binding.flickrRecyclerView,
+                this
+            )
+        )
+        binding.flickrRecyclerView.adapter = flickrRVAdaptor
+
         val url = createUrl(
             "https://api.flikr.com/services/feeds/photos_public.gne",
             "android,oreo",
@@ -44,14 +54,6 @@ class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadCompl
         //getRawData.setDownloadCompleteListener(this)
         getRawData.execute("https://api.flikr.com/services/feeds/photos_public.gne?tags=android,oreo&format=json&nojsoncallback=1")
 
-        setSupportActionBar(binding.toolbar)
-
-        val navHostFragment =
-            supportFragmentManager.findFragmentById(R.id.nav_host_fragment_content_main_photo_browser) as NavHostFragment
-        val navController = navHostFragment.navController
-
-        appBarConfiguration = AppBarConfiguration(navController.graph)
-        setupActionBarWithNavController(navController, appBarConfiguration)
 
 //        binding.fab.setOnClickListener { view ->
 //            Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
@@ -73,12 +75,6 @@ class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadCompl
             .appendQueryParameter("nojsoncallback", "1").build().toString()
     }
 
-    override fun onSupportNavigateUp(): Boolean {
-        val navController = findNavController(R.id.nav_host_fragment_content_main_photo_browser)
-        return navController.navigateUp(appBarConfiguration)
-                || super.onSupportNavigateUp()
-    }
-
     companion object {
         private const val TAG = "MainPhotoBrowserActivity"
     }
@@ -95,9 +91,18 @@ class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadCompl
 
     override fun onDataAvailable(data: List<Photo>) {
         Log.d(TAG, "onDataAvailable called, data is $data")
+        flickrRVAdaptor.loadNewData(data)
     }
 
     override fun onError(exception: Exception) {
         Log.d(TAG, "onError called with ${exception.message}")
+    }
+
+    override fun onItemClick(view: View, position: Int) {
+        Toast.makeText(this, "Normal tap at position $position", Toast.LENGTH_SHORT).show()
+    }
+
+    override fun onItemLongClick(view: View, position: Int) {
+        Toast.makeText(this, "Long tap at position $position", Toast.LENGTH_SHORT).show()
     }
 }
