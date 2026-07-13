@@ -1,5 +1,6 @@
 package com.example.androidappdevelopmentmasterclassusingkotlin.PhotoBrowserApp
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.util.Log
@@ -14,7 +15,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.androidappdevelopmentmasterclassusingkotlin.databinding.ActivityMainPhotoBrowserBinding
 
-class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadComplete,
+class MainPhotoBrowserActivity : BaseActivity(), GetRawData.OnDownloadComplete,
     GetFlickrJsonData.OnDataAvailable, RecyclerItemClickListener.OnRecyclerClickListener {
 
     private lateinit var appBarConfiguration: AppBarConfiguration
@@ -33,6 +34,7 @@ class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadCompl
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
+        activateToolbar(false)
 
         binding.flickrRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.flickrRecyclerView.addOnItemTouchListener(
@@ -104,5 +106,11 @@ class MainPhotoBrowserActivity : AppCompatActivity(), GetRawData.OnDownloadCompl
 
     override fun onItemLongClick(view: View, position: Int) {
         Toast.makeText(this, "Long tap at position $position", Toast.LENGTH_SHORT).show()
+        val photo = flickrRVAdaptor.getPhoto(position)
+        if(photo !=null){
+            val intent = Intent(this, PhotoDetailsActivity::class.java)
+            intent.putExtra(PHOTO_TRANSFER, photo)
+            startActivity(intent)
+        }
     }
 }

@@ -15,10 +15,12 @@
         android:theme="@style/Theme.AndroidAppDevelopmentMasterclassUsingKotlin">
         <activity
             android:name=".PhotoBrowserApp.PhotoDetailsActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:parentActivityName=".PhotoBrowserApp.MainPhotoBrowserActivity" />
         <activity
             android:name=".PhotoBrowserApp.SearchActivity"
             android:exported="false"
+            android:parentActivityName=".PhotoBrowserApp.MainPhotoBrowserActivity"
             android:theme="@style/Theme.AndroidAppDevelopmentMasterclassUsingKotlin" />
         <activity
             android:name=".PhotoBrowserApp.MainPhotoBrowserActivity"
@@ -42,6 +44,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".Section11.CalculatorActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
     </application>
 
 </manifest>
